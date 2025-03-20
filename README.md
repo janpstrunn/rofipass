@@ -1,6 +1,6 @@
 # rofipass: A rofi script for passwordstore
 
-`rofipass` is a `rofi` script, meant to be used alongside [passwordstore](https://www.passwordstore.org/), not to be confused with [pass](https://github.com/janpstrunn/pass).
+`rofipass` is a `rofi` script, meant to be used alongside [passwordstore](https://www.passwordstore.org/), not to be confused with [janpstrunn/pass](https://github.com/janpstrunn/pass).
 
 It's a tool that combines all the `pass` and [pass-otp](https://github.com/tadfisher/pass-otp) functionalities within `rofi` to allow you to easily get the password and OTP you need faster than anyone else.
 
