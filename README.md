@@ -32,28 +32,6 @@ mv src/rofipass "$HOME/.local/bin"
 ## Usage
 
 ```
-./rofipass
-```
-
-## Notes
-
-This script has been only tested in a Linux Machine.
-
-## License
-
-This repository is licensed under the MIT License, a very permissive license that allows you to use, modify, copy, distribute and more.
-
-## Installation
-
-Get started with a simple command:
-
-```bash
-curl -sSL https://github.com/janpstrunn/pass-rofi/raw/main/install.sh | bash
-```
-
-## Usage
-
-```
   ---------------------------------------------------
   ---------------------rofi-pass---------------------
   ---------------------------------------------------
@@ -79,8 +57,8 @@ Examples:
 
 ## Notes
 
-This script has been tested exclusively on a Linux machine.
+This script has been only tested in a Linux Machine.
 
 ## License
 
-This repository is licensed under the MIT License, allowing for extensive use, modification, copying, and distribution.
+This repository is licensed under the MIT License, a very permissive license that allows you to use, modify, copy, distribute and more.
