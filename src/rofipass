@@ -1,33 +1,128 @@
 #!/usr/bin/env bash
 
-# https://github.com/user/rofipass/blob/main/src/rofipass
-
-if ! command -v rofi &>/dev/null; then
-  echo "rofi could not be found. Please install it."
-  exit 1
-elif ! command -v pass &>/dev/null; then
-  echo "pass could not be found. Please install it."
-  exit 1
-fi
-
-_rofi() {
-  rofi -dmenu -i -no-levenshtein-sort -width 1000 "$@"
-}
-
 passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 
+[[ ! -d "$passdir" ]] && _error "No password directory found!" "Pass: Error" "low"
+
 switch_mode="Ctrl+s"
-addpass="Ctrl-1"
-delete="Ctrl-2"
-edit="Ctrl-3"
+close_tomb="Ctrl-z"
+open_tomb="Ctrl-o"
+switch_mode="Ctrl+s"
+addpass="Alt+a"
+delete="Ctrl-x"
+edit="Ctrl-y"
 
 help_color="#7c5cff"
 div_color="#334433"
 label="#f067fc"
 
-function otperror() {
-  notify-send -u normal "Pass: OTP" "Selected pass entry doesn't contains an OTP." --expire-time=3000
+clipmethod="$XDG_SESSION_TYPE"
+
+check_term() {
+  [[ -n "$term" ]] && return
+  for cmd in "$@"; do
+    if command -v "$cmd" &>/dev/null; then
+      term="$cmd"
+      break
+    fi
+  done
+}
+
+check_command() {
+  for cmd in "$@"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      echo "Error: $cmd could not be found. Please install it." >&2
+      exit 1
+    fi
+  done
+}
+
+check_command rofi pass
+
+function _notify() {
+  local message="$1"
+  local header="$2"
+  local urgency="$3"
+  echo "$message"
+  notify-send -u "$urgency" "$header" "$message" --expire-time=4000 --wait
+}
+
+function _error() {
+  _notify "$1" "$2" "$3"
   exit 1
+}
+
+function version() {
+  echo "v.1.0.0"
+}
+
+function usage() {
+  cat <<EOF
+  ---------------------------------------------------
+  ---------------------rofi-pass---------------------
+  ---------------------------------------------------
+  -------------A rofi extension for pass-------------
+  ---------------------------------------------------
+
+Usage: pass-rofi [options] <command> [arguments]
+
+Options:
+  -f             Force swap restrictions
+  -h             Display this help message and exit
+  -l             Default password length on generation
+  -t             Default terminal emulator (for tomb)
+  -v             Display the current version number
+
+Commands:
+  help                     Display this help message and exit
+  version                  Display the current version number
+
+Examples:
+  rofipass -f -l 72 -t kitty
+EOF
+}
+
+function _rofi() {
+  rofi -dmenu -i -no-levenshtein-sort -width 1000 "$@"
+}
+
+if ! command -v dunst &>/dev/null; then
+  echo "dunst could not be found. Please install it."
+  exit 1
+fi
+
+clearboard() {
+  [ -x "$(command -v dunst)" ] && dunstctl close-all
+
+  case "$clipmethod" in
+  x11)
+    echo "" | xclip -sel clip
+    ;;
+  wayland)
+    [ -x "$(command -v cliphist)" ] && cliphist wipe
+    echo "" | wl-copy
+    ;;
+  esac
+}
+
+function tomb_open() {
+  check_term ghostty kitty alacritty konsole wezterm foot xterm
+  if [ "$FORCE" == "true" ]; then
+    $term -- sh -c "pass tomb open -f"
+  else
+    $term -- sh -c "pass tomb open"
+  fi
+}
+
+function tomb_close() {
+  check_term ghostty kitty alacritty konsole wezterm foot xterm
+  $term -- sh -c "pass close"
+  pass_val=$?
+  if [ "$pass_val" -ne 0 ]; then
+    _error "Failed to close tomb!" "Pass: Tomb" "critical"
+  else
+    _notify "Your password tomb has been closed!" "Pass: Tomb" "normal"
+  fi
 }
 
 function deleteMenu() {
@@ -44,13 +139,14 @@ function deleteMenu() {
 }
 
 function addMenu() {
+  length=${length:-72}
   addmenu=$(echo | _rofi -p '> ' -mesg "<span color='${label}'>Usage: </span>Insert directory/passname")
   val=$?
   if [[ $val -eq 1 ]]; then
     notify-send -u low "Pass: Add" "Cancelled!"
     mode=pass main
   elif [[ $val -eq 0 ]]; then
-    pass generate $addmenu 72
+    pass generate "$addmenu" "$length"
     if [[ $val -eq 1 ]]; then
       notify-send -u normal "Pass: Add" "An error occurred!"
       mode=pass main
@@ -64,19 +160,21 @@ function addMenu() {
 function editMenu() {
   term=${TERMCMD:-kitty}
   if [ -z "$EDITOR" ]; then
-    export EDITOR=nvim
+    export EDITOR=vim
   fi
   $term -- sh -c "pass edit \"$menu\""
 }
 
 main() {
-  HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: toggle (pass/otp)
+  HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
+<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
 <span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
-  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}")
+  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}")
 
   val=$?
+
   case "$val" in
   1) exit ;;
   12) deleteMenu ;;
@@ -89,21 +187,50 @@ main() {
     ;;
   10) addMenu ;;
   13) editMenu ;;
+  14) tomb_close ;;
+  15) tomb_open ;;
   0)
     case "$mode" in
     pass)
-      pass -c "$menu" &&
-        notify-send -u critical "Pass: Password" "Copied to clipboard. Clearing in 5 seconds" --expire-time=4500 --wait
-      sh ~/scripts/__clearboard.sh
+      pass -c "$menu" || _error "Error copying the password!" "Pass: Copy" "critical"
+      _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Copy" "normal"
       ;;
     otp)
-      pass otp -c "$menu" || error
-      notify-send -u critical "Pass: OTP" "Copied to clipboard. Clearing in 5 seconds" --expire-time=4500 --wait
+      pass otp -c "$menu" || _error "Error copying the OTP!" "Pass: OTP" "critical"
+      _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: OTP" "normal"
       ;;
     esac
-    sh ~/scripts/__clearboard.sh
+    clearboard
     ;;
   esac
 }
+
+while getopts ":hvfl:t:" opt; do
+  case "$opt" in
+  h)
+    usage
+    exit 0
+    ;;
+  v)
+    version
+    exit 0
+    ;;
+  f)
+    FORCE=true
+    ;;
+  l)
+    length="$OPTARG"
+    ;;
+  t)
+    term="$OPTARG"
+    ;;
+  ?)
+    echo "Error: Invalid option '-$OPTARG'" >&2
+    usage
+    ;;
+  esac
+done
+
+shift $((OPTIND - 1))
 
 mode=pass main
