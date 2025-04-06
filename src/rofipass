@@ -4,14 +4,13 @@ passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 
 [[ ! -d "$passdir" ]] && _error "No password directory found!" "Pass: Error" "low"
 
-switch_mode="Ctrl+s"
-get_email="Alt+e"
+switch_mode="Alt+s"
+get_email="Alt+c"
+addpass="Alt+a"
+delete="Alt+d"
+edit="Alt+e"
 close_tomb="Ctrl-z"
 open_tomb="Ctrl-o"
-switch_mode="Ctrl-t"
-addpass="Alt+a"
-delete="Ctrl-x"
-edit="Ctrl-y"
 
 help_color="#7c5cff"
 div_color="#334433"
