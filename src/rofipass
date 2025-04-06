@@ -5,6 +5,7 @@ passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 [[ ! -d "$passdir" ]] && _error "No password directory found!" "Pass: Error" "low"
 
 switch_mode="Ctrl+s"
+get_email="Alt+e"
 close_tomb="Ctrl-z"
 open_tomb="Ctrl-o"
 switch_mode="Ctrl-t"
@@ -90,6 +91,18 @@ if ! command -v dunst &>/dev/null; then
   exit 1
 fi
 
+function copy_email() {
+  email=$(pass "$menu" | sed -n 's/^email=//p')
+  if [ "$clipmethod" = "x11" ]; then
+    xclip "$email" || _error "error copying the email!" "pass: email" "critical"
+    _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Email" "normal"
+  elif [ "$clipmethod" = "wayland" ]; then
+    wl-copy "$email" || _error "error copying the email!" "pass: email" "critical"
+    _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Email" "normal"
+  fi
+  clearboard
+}
+
 clearboard() {
   [ -x "$(command -v dunst)" ] && dunstctl close-all
 
@@ -167,14 +180,15 @@ function editMenu() {
 main() {
   if check_command tomb; then
     HELP="<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
-<span color='${label}'>Actions: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit
+<span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
   else
-    HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
-<span color='${label}'>Actions: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+    HELP="<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit
+<span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
   fi
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
-  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}")
+  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}" -kb-custom-7 "${get_email}")
 
   val=$?
   case "$val" in
@@ -189,6 +203,7 @@ main() {
   13) editMenu ;;
   14) tomb_close ;;
   15) tomb_open ;;
+  16) copy_email ;;
   0)
     pass -c "$menu" || _error "Error copying the password!" "Pass: Copy" "critical"
     _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Copy" "normal"
