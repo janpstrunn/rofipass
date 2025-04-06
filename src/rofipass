@@ -108,9 +108,9 @@ clearboard() {
 function tomb_open() {
   check_term ghostty kitty alacritty konsole wezterm foot xterm
   if [ "$FORCE" == "true" ]; then
-    $term -- sh -c "pass tomb open -f"
+    $term -- sh -c "pass open -f"
   else
-    $term -- sh -c "pass tomb open"
+    $term -- sh -c "pass open"
   fi
 }
 
@@ -160,7 +160,7 @@ function addMenu() {
 function editMenu() {
   term=${TERMCMD:-kitty}
   if [ -z "$EDITOR" ]; then
-    export EDITOR=vim
+    export EDITOR=nano
   fi
   $term -- sh -c "pass edit \"$menu\""
 }
