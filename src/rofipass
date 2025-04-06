@@ -7,7 +7,7 @@ passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 switch_mode="Ctrl+s"
 close_tomb="Ctrl-z"
 open_tomb="Ctrl-o"
-switch_mode="Ctrl+s"
+switch_mode="Ctrl-t"
 addpass="Alt+a"
 delete="Ctrl-x"
 edit="Ctrl-y"
@@ -166,44 +166,32 @@ function editMenu() {
 
 main() {
   if check_command tomb; then
-    HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
-<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
-<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+    HELP="<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
+<span color='${label}'>Actions: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
   else
     HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
-<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+<span color='${label}'>Actions: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
   fi
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
   menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}")
 
   val=$?
-
   case "$val" in
   1) exit ;;
   12) deleteMenu ;;
-  11) # Modes
-    case "$mode" in
-    otp) mode=pass ;;
-    pass) mode=otp ;;
-    esac
-    main
+  11) # OTP Copy
+    timeout 3 pass otp -c "$menu" || _error "Error copying the OTP!" "Pass: OTP" "critical"
+    _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: OTP" "normal"
+    clearboard
     ;;
   10) addMenu ;;
   13) editMenu ;;
   14) tomb_close ;;
   15) tomb_open ;;
   0)
-    case "$mode" in
-    pass)
-      pass -c "$menu" || _error "Error copying the password!" "Pass: Copy" "critical"
-      _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Copy" "normal"
-      ;;
-    otp)
-      pass otp -c "$menu" || _error "Error copying the OTP!" "Pass: OTP" "critical"
-      _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: OTP" "normal"
-      ;;
-    esac
+    pass -c "$menu" || _error "Error copying the password!" "Pass: Copy" "critical"
+    _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Copy" "normal"
     clearboard
     ;;
   esac
