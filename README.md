@@ -17,7 +17,7 @@
 
 - [pass](https://www.passwordstore.org/)
 - [pass-otp](https://github.com/tadfisher/pass-otp)
-- [pass-tomb](https://github.com/roddhjav/pass-tomb)
+- [pass-tomb](https://github.com/roddhjav/pass-tomb) (optional)
 - `rofi`
 
 ## Installation
