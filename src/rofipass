@@ -31,13 +31,12 @@ check_term() {
 check_command() {
   for cmd in "$@"; do
     if ! command -v "$cmd" &>/dev/null; then
-      echo "Error: $cmd could not be found. Please install it." >&2
-      exit 1
+      return 1
     fi
   done
 }
 
-check_command rofi pass
+check_command rofi pass || echo "Error: $cmd could not be found. Please install it." >&2
 
 function _notify() {
   local message="$1"
@@ -166,9 +165,14 @@ function editMenu() {
 }
 
 main() {
-  HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
+  if check_command tomb; then
+    HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
 <span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
 <span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+  else
+    HELP="<span color='${label}'>Modes: </span><span color='${help_color}'>${switch_mode}</span>: Toggle (pass/otp)
+<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit"
+  fi
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
   menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}")
