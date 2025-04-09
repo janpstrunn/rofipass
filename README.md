@@ -19,6 +19,7 @@
 - [pass-otp](https://github.com/tadfisher/pass-otp)
 - [pass-tomb](https://github.com/roddhjav/pass-tomb) (optional)
 - `rofi`
+- zbarimg (to add OTP)
 
 ## Installation
 
@@ -41,7 +42,7 @@ mv src/rofipass "$HOME/.local/bin"
 Usage: pass-rofi [options] <command> [arguments]
 
 Options:
-  -f             Force swap restrictions
+  -f             Lift swap restrictions (for tomb)
   -h             Display this help message and exit
   -l             Default password length on generation
   -t             Default terminal emulator (for tomb)
