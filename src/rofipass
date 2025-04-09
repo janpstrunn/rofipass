@@ -7,6 +7,7 @@ passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 switch_mode="Alt+s"
 get_email="Alt+c"
 addpass="Alt+a"
+addotp="Alt+v"
 delete="Alt+d"
 edit="Alt+e"
 close_tomb="Ctrl-z"
@@ -66,7 +67,7 @@ function usage() {
 Usage: pass-rofi [options] <command> [arguments]
 
 Options:
-  -f             Force swap restrictions
+  -f             Lift swap restrictions (for tomb)
   -h             Display this help message and exit
   -l             Default password length on generation
   -t             Default terminal emulator (for tomb)
@@ -100,6 +101,20 @@ function copy_email() {
     _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Email" "normal"
   fi
   clearboard
+}
+
+function append_otp() {
+  check_command zbarimg || _error "zbarimg is not installed" "Pass: Error" "normal"
+  case "$clipmethod" in
+  x11)
+    xclip -o | zbarimg -q --raw - | pass otp append "$menu" || _error "Failed to append OTP to $menu" "Pass: Error" "critical"
+    _notify "Insert OTP successfully" "Pass: OTP" "normal"
+    ;;
+  wayland)
+    wl-paste --type image/png | zbarimg -q --raw - | pass otp append "$menu" || _error "Failed to append OTP to $menu" "Pass: Error" "critical"
+    _notify "Insert OTP successfully" "Pass: OTP" "normal"
+    ;;
+  esac
 }
 
 clearboard() {
@@ -179,15 +194,15 @@ function editMenu() {
 main() {
   if check_command tomb; then
     HELP="<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
-<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit
+<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${addotp}</span>: Add OTP
 <span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
   else
-    HELP="<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit
+    HELP="<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${addotp}</span>: Add OTP
 <span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
   fi
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
-  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}" -kb-custom-7 "${get_email}")
+  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}" -kb-custom-7 "${get_email}" -kb-custom-8 "${addotp}")
 
   val=$?
   case "$val" in
@@ -203,6 +218,7 @@ main() {
   14) tomb_close ;;
   15) tomb_open ;;
   16) copy_email ;;
+  17) append_otp ;;
   0)
     pass -c "$menu" || _error "Error copying the password!" "Pass: Copy" "critical"
     _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Copy" "normal"
