@@ -18,8 +18,8 @@
 - [pass](https://www.passwordstore.org/)
 - [pass-otp](https://github.com/tadfisher/pass-otp)
 - [pass-tomb](https://github.com/roddhjav/pass-tomb) (optional)
-- `rofi`
-- zbarimg (to add OTP)
+- [rofi](https://github.com/davatorium/rofi)
+- [zbar](https://github.com/mchehab/zbar) (to add OTP)
 
 ## Installation
 
