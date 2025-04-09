@@ -94,10 +94,10 @@ fi
 function copy_email() {
   email=$(pass "$menu" | sed -n 's/^email=//p')
   if [ "$clipmethod" = "x11" ]; then
-    xclip "$email" || _error "error copying the email!" "pass: email" "critical"
+    xclip "$email" || _error "Error copying the email!" "pass: email" "critical"
     _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Email" "normal"
   elif [ "$clipmethod" = "wayland" ]; then
-    wl-copy "$email" || _error "error copying the email!" "pass: email" "critical"
+    wl-copy "$email" || _error "Error copying the email!" "pass: email" "critical"
     _notify "Copied to clipboard. Clearing in 5 seconds" "Pass: Email" "normal"
   fi
   clearboard
@@ -185,10 +185,8 @@ function addMenu() {
 
 function editMenu() {
   term=${TERMCMD:-kitty}
-  if [ -z "$EDITOR" ]; then
-    export EDITOR=nano
-  fi
-  $term -- sh -c "pass edit \"$menu\""
+  editor=${EDITOR:-nano}
+  $term -- sh -c "export EDITOR=\"$editor\"; pass edit \"$menu\""
 }
 
 main() {
