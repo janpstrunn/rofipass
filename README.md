@@ -53,8 +53,14 @@ Commands:
   version                  Display the current version number
 
 Examples:
-  rofipass -f -l 72 -t kitty
+  rofipass -f -l 72 -t foot
 ```
+
+### Managing the Files
+
+`pass` does not impose any limitations on how the files should be written, but it will always return the first line of the file as the password. `pass-otp`, whatsoever will look for the OTP key in the very last line. Any string in between won't be used, thus can have any data.
+
+`rofipass` also has a way to grab some data from the encrypted file. If a line starts with `email=` it will recognize that, and will allow to copy the email to the clipboard.
 
 ## Notes
 
