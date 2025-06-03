@@ -4,14 +4,14 @@ passdir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
 
 [[ ! -d "$passdir" ]] && _error "No password directory found!" "Pass: Error" "low"
 
-switch_mode="Alt+s"
-get_email="Alt+c"
-addpass="Alt+a"
-addotp="Alt+v"
-delete="Alt+d"
-edit="Alt+e"
-close_tomb="Ctrl-z"
-open_tomb="Ctrl-o"
+kb_copy_email="Ctrl+2" # EMAIL
+kb_copy_otp="Ctrl-1"   # MODE
+kb_add_pass="Ctrl+r"   # PASSWORD
+kb_add_otp="Ctrl+t"    # TOTP
+kb_delete="Ctrl-x"     # DELETE
+kb_edit="Ctrl+y"       # EDIT
+kb_close_tomb="Ctrl-z" # CLOSE TOMB
+kb_open_tomb="Ctrl-o"  # OPEN TOMB
 
 help_color="#7c5cff"
 div_color="#334433"
@@ -191,16 +191,16 @@ function editMenu() {
 
 main() {
   if check_command tomb; then
-    HELP="<span color='${label}'>Tomb: </span><span color='${help_color}'>${close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${open_tomb}</span>: Open Tomb
-<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${addotp}</span>: Add OTP
-<span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
+    HELP="<span color='${label}'>Tomb: </span><span color='${help_color}'>${kb_close_tomb}</span>: Close Tomb <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_open_tomb}</span>: Open Tomb
+<span color='${label}'>Actions: </span><span color='${help_color}'>${kb_add_pass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_add_otp}</span>: Add OTP
+<span color='${label}'>Copy: </span><span color='${help_color}'>${kb_copy_otp}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_copy_email}</span>: Copy Email"
   else
-    HELP="<span color='${label}'>Actions: </span><span color='${help_color}'>${addpass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${addotp}</span>: Add OTP
-<span color='${label}'>Copy: </span><span color='${help_color}'>${switch_mode}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${get_email}</span>: Copy Email"
+    HELP="<span color='${label}'>Actions: </span><span color='${help_color}'>${kb_add_pass}</span>: Add <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_delete}</span>: Delete <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_edit}</span>: Edit <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_add_otp}</span>: Add OTP
+<span color='${label}'>Copy: </span><span color='${help_color}'>${kb_copy_otp}</span>: Copy OTP <span color='${div_color}'>|</span> <span color='${help_color}'>${kb_copy_email}</span>: Copy Email"
   fi
 
   pass=$(find "$passdir" -type f -name '*.gpg' -printf '%P\n' | awk -F. '{print $1}')
-  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${addpass}" -kb-custom-2 "${switch_mode}" -kb-custom-3 "${delete}" -kb-custom-4 "${edit}" -kb-custom-5 "${close_tomb}" -kb-custom-6 "${open_tomb}" -kb-custom-7 "${get_email}" -kb-custom-8 "${addotp}")
+  menu=$(echo "${pass}" | _rofi -p "$mode" -mesg "${HELP}" -kb-custom-1 "${kb_add_pass}" -kb-custom-2 "${kb_copy_otp}" -kb-custom-3 "${kb_delete}" -kb-custom-4 "${kb_edit}" -kb-custom-5 "${kb_close_tomb}" -kb-custom-6 "${kb_open_tomb}" -kb-custom-7 "${kb_copy_email}" -kb-custom-8 "${kb_add_otp}")
 
   val=$?
   case "$val" in
